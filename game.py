@@ -113,7 +113,7 @@ class Map:
     FLOOR = 1
     WALL = 2
 
-    tilesize = 16 #tile size in pixels
+    tilesize = 48 #tile size in pixels
     def __init__(self):
         self.xsize = 80
         self.ysize = 80
@@ -188,15 +188,15 @@ class Application:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_w:
-                        self.cameraY -= 5
-                    elif event.key == pygame.K_s:
-                        self.cameraY += 5
-                    elif event.key == pygame.K_d:
-                        self.cameraX += 5
-                    elif event.key == pygame.K_a:
-                        self.cameraX -= 5
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_w]:
+                self.cameraY -= 5
+            if keys[pygame.K_s]:
+                self.cameraY += 5
+            if keys[pygame.K_a]:
+                self.cameraX -= 5
+            if keys[pygame.K_d]:
+                self.cameraX += 5
 
             #Normal gameplay state
             if self.state == 0:
@@ -210,8 +210,8 @@ class Application:
         for x,column in enumerate(self.level.data):
             for y,tile in enumerate(self.level.data[x]):
                 tilesize = Map.tilesize
-                tilex = x*tilesize - self.cameraX*tilesize
-                tiley = y*tilesize - self.cameraY*tilesize
+                tilex = x*tilesize - self.cameraX#*tilesize
+                tiley = y*tilesize - self.cameraY#*tilesize
                 tilerect = pygame.Rect(tilex,tiley,tilesize,tilesize)
                 if tile == Map.FLOOR:
                     self.screen.blit(self.floorTile,tilerect)
