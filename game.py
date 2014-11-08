@@ -97,16 +97,16 @@ class Entity(object):
 
 class Room:
     def __init__(self,level):
-        self.xsize = random.randint(4,10)
-        self.ysize = random.randint(4,10)
-        self.x = random.randint(0,level.xsize-self.xsize)
-        self.y = random.randint(0,level.ysize-self.ysize)
-        self.rect = pygame.Rect(self.x,self.y,self.xsize,self.ysize)
+        self.xSize = random.randint(4,10)
+        self.ySize = random.randint(4,10)
+        self.x = random.randint(0,level.xSize-self.xSize)
+        self.y = random.randint(0,level.ySize-self.ySize)
+        self.rect = pygame.Rect(self.x,self.y,self.xSize,self.ySize)
 
     def randomizePos(self,level):
-        self.x = random.randint(0,level.xsize-self.xsize)
-        self.y = random.randint(0,level.ysize-self.ysize)
-        self.rect = pygame.Rect(self.x,self.y,self.xsize,self.ysize)
+        self.x = random.randint(0,level.xSize-self.xSize)
+        self.y = random.randint(0,level.ySize-self.ySize)
+        self.rect = pygame.Rect(self.x,self.y,self.xSize,self.ySize)
 
 class Map:
     EMPTY = 0
@@ -115,16 +115,16 @@ class Map:
 
     tilesize = 48 #tile size in pixels
     def __init__(self):
-        self.xsize = 80
-        self.ysize = 80
+        self.xSize = 80
+        self.ySize = 80
 
         self.numRooms = random.randint(6,12)
         self.rooms = []
         self.data = []
 
-        #create columns
-        for x in range(self.xsize):
-            self.data.append([Map.EMPTY for y in range(self.ysize)])
+        #Initialize list of lists data[row][column]
+        for x in range(self.xSize):
+            self.data.append([Map.EMPTY for y in range(self.ySize)])
 
         for i in range(self.numRooms):
             newRoom = Room(self)
@@ -136,19 +136,59 @@ class Map:
                 room.randomizePos(self)
                 i -= 1
 
+        #Create rooms
         for room in self.rooms:
-            for x in range(room.xsize):
-                for y in range(room.ysize):
+            for x in range(room.xSize):
+                for y in range(room.ySize):
                     self.data[x+room.x][y+room.y] = Map.FLOOR
+        
+        #Create hallways between rooms
+        for i in range(self.numRooms-1):
+            room1 = self.rooms[i]
+            room2 = self.rooms[i+1]
+            
+            xCenter1 = room1.x+room1.xSize//2
+            xCenter2 = room2.x+room2.xSize//2
+            yCenter1 = room1.y+room1.ySize//2
+            yCenter2 = room2.y+room2.ySize//2
+            
+            if abs(xCenter1-xCenter2) > room1.xSize:
+                if (xCenter1-xCenter2) < 0: #second room is to the right
+                    hallwayStart = (room1.x+room1.xSize,yCenter1)
+                else:
+                    hallwayStart = (room1.x-1,yCenter1)
+            else:
+                if (yCenter1-yCenter2) < 0: #second room is higher
+                    hallwayStart = (xCenter1,room1.y-1)
+                else:
+                    hallwayStart = (xCenter1,room1.y+room1.ySize)
+            
+            endX = hallwayStart[0]
+            
+            for x in range(abs(hallwayStart[0]-xCenter2)):
+                if hallwayStart[0] < xCenter2:
+                    self.data[hallwayStart[0]+x][yCenter1] = Map.FLOOR
+                    endX += 1
+                else:
+                    self.data[hallwayStart[0]-x][yCenter1] = Map.FLOOR
+                    endX -= 1
 
-        for y in range(self.ysize):
-            for x in range(self.xsize):
+            for y in range(abs(hallwayStart[1]-yCenter2)):
+                if hallwayStart[1] < yCenter2:
+                    self.data[endX][hallwayStart[1]+y] = Map.FLOOR
+                else:
+                    self.data[endX][hallwayStart[1]-y] = Map.FLOOR
+
+        for y in range(self.ySize):
+            for x in range(self.xSize):
                 tile = self.data[x][y]
                 #print tile,
                 if tile == Map.FLOOR:
                     sys.stdout.write('A')
-                if tile == Map.EMPTY:
+                elif tile == Map.EMPTY:
                     sys.stdout.write('-')
+                else:
+                    sys.stdout.write(str(tile))
             sys.stdout.write('\n')
 
 class Application:
@@ -190,13 +230,13 @@ class Application:
                     running = False
             keys = pygame.key.get_pressed()
             if keys[pygame.K_w]:
-                self.cameraY -= 5
+                self.cameraY -= 25
             if keys[pygame.K_s]:
-                self.cameraY += 5
+                self.cameraY += 25
             if keys[pygame.K_a]:
-                self.cameraX -= 5
+                self.cameraX -= 25
             if keys[pygame.K_d]:
-                self.cameraX += 5
+                self.cameraX += 25
 
             #Normal gameplay state
             if self.state == 0:
