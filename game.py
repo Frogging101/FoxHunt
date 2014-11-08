@@ -112,6 +112,7 @@ class Map:
     EMPTY = 0
     FLOOR = 1
     WALL = 2
+    TURRET = 3
 
     tilesize = 48 #tile size in pixels
     def __init__(self):
@@ -178,6 +179,13 @@ class Map:
                     self.data[endX][hallwayStart[1]+y] = Map.FLOOR
                 else:
                     self.data[endX][hallwayStart[1]-y] = Map.FLOOR
+            
+        #Yet another loop through the rooms. This time we're
+        #adding turrets
+        for room in self.rooms:
+            for tile in range(room.xSize*room.ySize):
+                if random.random() < 1/10:
+                    self.data[room.x+tile%room.xSize][room.y+tile//room.xSize] = Map.TURRET
 
         for y in range(self.ySize):
             for x in range(self.xSize):
@@ -214,7 +222,9 @@ class Application:
 
         self.level = Map()
         self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
+        self.turretTile = pygame.Surface((Map.tilesize,Map.tilesize))
         self.floorTile.fill((255,0,0))
+        self.turretTile.fill((0,255,0))
 
         self.font = pygame.font.Font("PressStart2P.ttf",24)
 #        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
@@ -255,6 +265,8 @@ class Application:
                 tilerect = pygame.Rect(tilex,tiley,tilesize,tilesize)
                 if tile == Map.FLOOR:
                     self.screen.blit(self.floorTile,tilerect)
+                if tile == Map.TURRET:
+                    self.screen.blit(self.turretTile,tilerect)
  
         pygame.display.flip()
 Application().run()
