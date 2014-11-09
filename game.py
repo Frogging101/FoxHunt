@@ -5,9 +5,6 @@ import math
 import random
 import sys
 
-level = None
-player = None
-
 class Vector:
     def __init__(self,x=0,y=0):
         self.x = x
@@ -104,8 +101,8 @@ class Turret(Entity):
         self.shootTimer = 0
         super(Turret,self).__init__(Turret.sprite)
     
-    def canSeePlayer(self):
-        toPlayer = Vector(player.x,player.y)-Vector(self.x,self.y)
+    def canSeePlayer(self,app):
+        toPlayer = Vector(app.player.x,app.player.y)-Vector(self.x,self.y)
         if toPlayer.getMagnitude() >= 14*Map.tilesize: #Player more than 14 tiles away
             return False
         toPlayer = toPlayer.normalize()
@@ -114,22 +111,37 @@ class Turret(Entity):
         while rayLength < 14*Map.tilesize:
             ray = rayLength*toPlayer
             colliderRect = pygame.Rect(ray.x,ray.y,1,1)
-            if colliderRect.collidelist(level.collisionTiles) != -1:
+            if colliderRect.collidelist(app.level.collisionTiles) != -1:
                 return False
-            if colliderRect.colliderect(player.rect):
+            if colliderRect.colliderect(app.player.rect):
                 return True
             rayLength += 24
         return True
 
-    def update(self,dt):
+    def update(self,dt,app):
         self.shootTimer += dt
         if self.shootTimer >= 1500:
-            if self.canSeePlayer():
-                self.shoot()
+            if self.canSeePlayer(app):
+                self.shoot(app)
             self.shootTimer = 0
 
-    def shoot(self):
-        pass
+    def shoot(self,app):
+        toPlayer = Vector(app.player.x,app.player.y)-Vector(self.x,self.y)
+        newBullet = Bullet((self.x+self.rect.width//2,self.y+self.rect.height//2),
+                           toPlayer.normalize())
+        app.bullets.append(newBullet)
+
+class Bullet(Entity):
+    sprite = pygame.image.load("bullet.png")
+    def __init__(self,origin,direction):
+        print "bullet",origin,direction
+        left = Vector(-1,0)
+        angle = 360-(math.acos(Vector.dot(left,direction))*(180/math.pi))
+        self.sprite = pygame.transform.rotate(Bullet.sprite,angle)
+        self.velocity = 25*direction
+        self.x = origin[0]
+        self.y = origin[1]
+        self.rect = self.sprite.get_rect()
 
 class Room:
     def __init__(self,level):
@@ -272,7 +284,6 @@ class Map:
 
 class Application:
     def __init__(self):
-        global level,player
         pygame.init()
         pygame.mixer.init(44100)
 
@@ -292,12 +303,14 @@ class Application:
         self.cameraX = 0
         self.cameraY = 0
 
-        level = Map()
+        self.level = Map()
         self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
         self.turretTile = pygame.image.load("turret.png")
         self.wallTile = pygame.Surface((Map.tilesize,Map.tilesize))
-        player = Entity(pygame.image.load("player.png"))
-        player.move(level.spawnX,level.spawnY)
+        self.player = Entity(pygame.image.load("player.png"))
+        self.player.move(self.level.spawnX,self.level.spawnY)
+
+        self.bullets = []
 
         self.floorTile.fill((255,0,0))
         self.wallTile.fill((0,0,255))
@@ -312,11 +325,11 @@ class Application:
         collideX = False
         collideY = False
 
-        if obj.collidelist(level.collisionTiles) != -1:
+        if obj.collidelist(self.level.collisionTiles) != -1:
             collideX = True
         obj.x -= 5*direction.x
         obj.y += 5*direction.y
-        if obj.collidelist(level.collisionTiles) != -1:
+        if obj.collidelist(self.level.collisionTiles) != -1:
             collideY = True
 
         if collideX:
@@ -348,24 +361,26 @@ class Application:
                 if keys[pygame.K_d]:
                     direction += Vector(1,0)
 
-                self.collideLevel(player.rect,direction)
-                player.x += 12*direction.x#*30*dt/1000
-                player.y += 12*direction.y#*30*dt/1000
+                self.collideLevel(self.player.rect,direction)
+                self.player.x += 12*direction.x#*30*dt/1000
+                self.player.y += 12*direction.y#*30*dt/1000
 
-                player.update(dt)
-                for turret in level.turrets:
-                    turret.update(dt)
+                self.player.update(dt)
+                for turret in self.level.turrets:
+                    turret.update(dt,self)
+                for bullet in self.bullets:
+                    bullet.update(dt)
 
-                self.cameraX = player.x+player.rect.width//2-self.width//2
-                self.cameraY = player.y+player.rect.height//2-self.height//2
+                self.cameraX = self.player.x+self.player.rect.width//2-self.width//2
+                self.cameraY = self.player.y+self.player.rect.height//2-self.height//2
 
                 self.mouseEntity.move(*pygame.mouse.get_pos())
                 self.draw()
 
     def draw(self):
         self.screen.fill(self.bg_colour)
-        for x,column in enumerate(level.data):
-            for y,tile in enumerate(level.data[x]):
+        for x,column in enumerate(self.level.data):
+            for y,tile in enumerate(self.level.data[x]):
                 tilesize = Map.tilesize
                 tilex = x*tilesize - self.cameraX
                 tiley = y*tilesize - self.cameraY
@@ -377,10 +392,11 @@ class Application:
                     self.screen.blit(self.turretTile,tilerect)
                 if tile == Map.WALL:
                     self.screen.blit(self.wallTile,tilerect)
-        playerScreenRect = pygame.Rect(player.rect)
-        playerScreenRect.x -= self.cameraX
-        playerScreenRect.y -= self.cameraY
-        self.screen.blit(player.sprite,playerScreenRect)
+        playerScreenRect = self.player.rect.move(-self.cameraX,-self.cameraY)
+        self.screen.blit(self.player.sprite,playerScreenRect)
+        for bullet in self.bullets:
+            bulletScreenRect = bullet.rect.move(-self.cameraX,-self.cameraY)
+            self.screen.blit(bullet.sprite,bulletScreenRect)
 
         pygame.display.flip()
 Application().run()
