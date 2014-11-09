@@ -122,6 +122,7 @@ class Map:
         self.numRooms = random.randint(6,12)
         self.rooms = []
         self.data = []
+        self.wallTiles = []
 
         #Initialize list of lists data[row][column]
         for x in range(self.xSize):
@@ -142,7 +143,11 @@ class Map:
             for x in range(room.xSize):
                 for y in range(room.ySize):
                     self.data[x+room.x][y+room.y] = Map.FLOOR
-        
+
+        spawnRoom = self.rooms[random.randint(0,self.numRooms-1)]
+        self.spawnX = spawnRoom.x+spawnRoom.xSize//2
+        self.spawnY = spawnRoom.y+spawnRoom.ySize//2
+
         #Create hallways between rooms
         for i in range(self.numRooms-1):
             room1 = self.rooms[i]
@@ -183,6 +188,8 @@ class Map:
         #Yet another loop through the rooms. This time we're
         #adding turrets
         for room in self.rooms:
+            if room == spawnRoom:
+                continue
             for tile in range(room.xSize*room.ySize):
                 if random.random() < 1/10:
                     self.data[room.x+tile%room.xSize][room.y+tile//room.xSize] = Map.TURRET
@@ -203,6 +210,8 @@ class Map:
                     for pos in adjacents:
                         if self.data[pos[0]][pos[1]] == Map.EMPTY:
                             self.data[pos[0]][pos[1]] = Map.WALL
+                            newTile = pygame.Rect(x*self.tilesize,y*self.tilesize,self.tilesize,self.tilesize)
+                            self.wallTiles.append(newTile)
                 x += 1
             y += 1
 
@@ -243,6 +252,10 @@ class Application:
         self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
         self.turretTile = pygame.image.load("turret.png")
         self.wallTile = pygame.Surface((Map.tilesize,Map.tilesize))
+        self.playerSprite = pygame.image.load("player.png")
+        self.playerRect = self.playerSprite.get_rect()
+        self.playerRect = self.playerRect.move(self.level.spawnX,self.level.spawnY)
+
         self.floorTile.fill((255,0,0))
         self.wallTile.fill((0,0,255))
 
@@ -260,13 +273,16 @@ class Application:
                     running = False
             keys = pygame.key.get_pressed()
             if keys[pygame.K_w]:
-                self.cameraY -= 25
+                self.playerRect.y -= 25
             if keys[pygame.K_s]:
-                self.cameraY += 25
+                self.playerRect.y += 25
             if keys[pygame.K_a]:
-                self.cameraX -= 25
+                self.playerRect.x -= 25
             if keys[pygame.K_d]:
-                self.cameraX += 25
+                self.playerRect.x += 25
+
+            self.cameraX = self.playerRect.x+self.playerRect.width//2
+            self.cameraY = self.playerRect.y+self.playerRect.height//2
 
             #Normal gameplay state
             if self.state == 0:
@@ -280,8 +296,8 @@ class Application:
         for x,column in enumerate(self.level.data):
             for y,tile in enumerate(self.level.data[x]):
                 tilesize = Map.tilesize
-                tilex = x*tilesize - self.cameraX#*tilesize
-                tiley = y*tilesize - self.cameraY#*tilesize
+                tilex = x*tilesize - self.cameraX
+                tiley = y*tilesize - self.cameraY
                 tilerect = pygame.Rect(tilex,tiley,tilesize,tilesize)
                 if tile == Map.FLOOR:
                     self.screen.blit(self.floorTile,tilerect)
@@ -290,7 +306,11 @@ class Application:
                     self.screen.blit(self.turretTile,tilerect)
                 if tile == Map.WALL:
                     self.screen.blit(self.wallTile,tilerect)
- 
+        playerScreenRect = pygame.Rect(self.playerRect)
+        playerScreenRect.x = self.width//2
+        playerScreenRect.y = self.height//2
+        self.screen.blit(self.playerSprite,playerScreenRect)
+
         pygame.display.flip()
 Application().run()
 pygame.quit()
