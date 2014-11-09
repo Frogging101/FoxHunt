@@ -145,8 +145,8 @@ class Map:
                     self.data[x+room.x][y+room.y] = Map.FLOOR
 
         spawnRoom = self.rooms[random.randint(0,self.numRooms-1)]
-        self.spawnX = spawnRoom.x+spawnRoom.xSize//2
-        self.spawnY = spawnRoom.y+spawnRoom.ySize//2
+        self.spawnX = spawnRoom.x*self.tilesize + (spawnRoom.xSize*self.tilesize)//2
+        self.spawnY = spawnRoom.y*self.tilesize + (spawnRoom.ySize*self.tilesize)//2
 
         #Create hallways between rooms
         for i in range(self.numRooms-1):
@@ -210,7 +210,7 @@ class Map:
                     for pos in adjacents:
                         if self.data[pos[0]][pos[1]] == Map.EMPTY:
                             self.data[pos[0]][pos[1]] = Map.WALL
-                            newTile = pygame.Rect(x*self.tilesize,y*self.tilesize,self.tilesize,self.tilesize)
+                            newTile = pygame.Rect(pos[0]*self.tilesize,pos[1]*self.tilesize,self.tilesize,self.tilesize)
                             self.wallTiles.append(newTile)
                 x += 1
             y += 1
@@ -263,6 +263,15 @@ class Application:
 #        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
 #        self.endgameSound = pygame.mixer.Sound("171672__fins__failure-2.wav")
 
+    def collideWall(self,obj,direction):
+        obj = pygame.Rect(obj)
+        obj.x += 5*direction.x
+        obj.y += 5*direction.y
+        if obj.collidelist(self.level.wallTiles) != -1:
+            return True
+        else:
+            return False
+
     def run(self):
         running = True
         clock = pygame.time.Clock()
@@ -272,17 +281,22 @@ class Application:
                 if event.type == pygame.QUIT:
                     running = False
             keys = pygame.key.get_pressed()
+            direction = Vector()
             if keys[pygame.K_w]:
-                self.playerRect.y -= 25
+                direction += Vector(0,-1)
             if keys[pygame.K_s]:
-                self.playerRect.y += 25
+                direction += Vector(0,1)
             if keys[pygame.K_a]:
-                self.playerRect.x -= 25
+                direction += Vector(-1,0)
             if keys[pygame.K_d]:
-                self.playerRect.x += 25
+                direction += Vector(1,0)
 
-            self.cameraX = self.playerRect.x+self.playerRect.width//2
-            self.cameraY = self.playerRect.y+self.playerRect.height//2
+            if not self.collideWall(self.playerRect,direction):
+                self.playerRect.x += 12*direction.x
+                self.playerRect.y += 12*direction.y
+
+            self.cameraX = self.playerRect.x+self.playerRect.width//2-self.width//2
+            self.cameraY = self.playerRect.y+self.playerRect.height//2-self.height//2
 
             #Normal gameplay state
             if self.state == 0:
@@ -307,9 +321,14 @@ class Application:
                 if tile == Map.WALL:
                     self.screen.blit(self.wallTile,tilerect)
         playerScreenRect = pygame.Rect(self.playerRect)
-        playerScreenRect.x = self.width//2
-        playerScreenRect.y = self.height//2
+        playerScreenRect.x -= self.cameraX
+        playerScreenRect.y -= self.cameraY
         self.screen.blit(self.playerSprite,playerScreenRect)
+        """for tile in self.level.wallTiles:
+            tile = pygame.Rect(tile)
+            tile.x -= self.cameraX
+            tile.y -= self.cameraY
+            self.screen.blit(self.wallTile,tile)"""
 
         pygame.display.flip()
 Application().run()
