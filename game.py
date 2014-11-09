@@ -144,7 +144,7 @@ class Bullet(Entity):
     def __init__(self,origin,direction):
         print "bullet",origin,direction
         left = Vector(-1,0)
-        angle = 360-(math.acos(Vector.dot(left,direction))*(180/math.pi))
+        angle = (math.acos(Vector.dot(left,direction))*(180/math.pi))
         self.sprite = pygame.transform.rotate(Bullet.sprite,angle)
         self.velocity = 25*direction
         self.x = origin[0]
@@ -298,6 +298,7 @@ class Application:
         self.width = 800
         self.height = 600
         self.screen = pygame.display.set_mode((self.width,self.height))
+        Bullet.sprite = Bullet.sprite.convert_alpha() #This is here because it has to be done after init
         self.bg_colour = 0,0,0
 
         #Entity representing the mouse, no model
