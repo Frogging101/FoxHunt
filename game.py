@@ -114,13 +114,11 @@ class Room:
     def __init__(self,level):
         self.xSize = random.randint(4,10)
         self.ySize = random.randint(4,10)
-        self.x = random.randint(0,level.xSize-self.xSize)
-        self.y = random.randint(0,level.ySize-self.ySize)
-        self.rect = pygame.Rect(self.x,self.y,self.xSize,self.ySize)
+        self.randomizePos(level)
 
     def randomizePos(self,level):
-        self.x = random.randint(0,level.xSize-self.xSize)
-        self.y = random.randint(0,level.ySize-self.ySize)
+        self.x = random.randint(1,level.xSize-self.xSize-1)
+        self.y = random.randint(1,level.ySize-self.ySize-1)
         self.rect = pygame.Rect(self.x,self.y,self.xSize,self.ySize)
 
 class Map:
