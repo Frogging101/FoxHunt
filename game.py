@@ -95,6 +95,21 @@ class Entity(object):
     def getPosition(self):
         return Vector(self.x,self.y)
 
+class Turret(Entity):
+    sprite = pygame.image.load("turret.png")
+    def __init__(self):
+        self.shootTimer = 0
+        super(Turret,self).__init__(Turret.sprite)
+    
+    def update(self,dt):
+        self.shootTimer += dt
+        if self.shootTimer <= 1500:
+            self.shoot()
+            self.shootTimer = 0
+
+    def shoot(self):
+        pass
+
 class Room:
     def __init__(self,level):
         self.xSize = random.randint(4,10)
@@ -122,7 +137,7 @@ class Map:
         self.numRooms = random.randint(6,12)
         self.rooms = []
         self.data = []
-        self.wallTiles = []
+        self.collisionTiles = []
 
         #Initialize list of lists data[row][column]
         for x in range(self.xSize):
@@ -192,7 +207,12 @@ class Map:
                 continue
             for tile in range(room.xSize*room.ySize):
                 if random.random() < 1/10:
-                    self.data[room.x+tile%room.xSize][room.y+tile//room.xSize] = Map.TURRET
+                    tileX = room.x+tile%room.xSize
+                    tileY = room.y+tile//room.xSize
+                    self.data[tileX][tileY] = Map.TURRET
+                    newTile = pygame.Rect(tileX*self.tilesize,tileY*self.tilesize,
+                                          self.tilesize,self.tilesize)
+                    self.collisionTiles.append(newTile)
 
         #Finally add the walls
         for y in range(1,self.ySize-1):
@@ -211,7 +231,7 @@ class Map:
                         if self.data[pos[0]][pos[1]] == Map.EMPTY:
                             self.data[pos[0]][pos[1]] = Map.WALL
                             newTile = pygame.Rect(pos[0]*self.tilesize,pos[1]*self.tilesize,self.tilesize,self.tilesize)
-                            self.wallTiles.append(newTile)
+                            self.collisionTiles.append(newTile)
                 x += 1
             y += 1
 
@@ -252,9 +272,8 @@ class Application:
         self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
         self.turretTile = pygame.image.load("turret.png")
         self.wallTile = pygame.Surface((Map.tilesize,Map.tilesize))
-        self.playerSprite = pygame.image.load("player.png")
-        self.playerRect = self.playerSprite.get_rect()
-        self.playerRect = self.playerRect.move(self.level.spawnX,self.level.spawnY)
+        self.player = Entity(pygame.image.load("player.png"))
+        self.player.move(self.level.spawnX,self.level.spawnY)
 
         self.floorTile.fill((255,0,0))
         self.wallTile.fill((0,0,255))
@@ -263,17 +282,17 @@ class Application:
 #        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
 #        self.endgameSound = pygame.mixer.Sound("171672__fins__failure-2.wav")
 
-    def collideWall(self,obj,direction):
+    def collideLevel(self,obj,direction):
         obj = pygame.Rect(obj)
         obj.x += 5*direction.x
         collideX = False
         collideY = False
 
-        if obj.collidelist(self.level.wallTiles) != -1:
+        if obj.collidelist(self.level.collisionTiles) != -1:
             collideX = True
         obj.x -= 5*direction.x
         obj.y += 5*direction.y
-        if obj.collidelist(self.level.wallTiles) != -1:
+        if obj.collidelist(self.level.collisionTiles) != -1:
             collideY = True
 
         if collideX:
@@ -289,29 +308,32 @@ class Application:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            keys = pygame.key.get_pressed()
-            direction = Vector()
-            if keys[pygame.K_w]:
-                direction += Vector(0,-1)
-            if keys[pygame.K_s]:
-                direction += Vector(0,1)
-            if keys[pygame.K_a]:
-                direction += Vector(-1,0)
-            if keys[pygame.K_d]:
-                direction += Vector(1,0)
-
-            self.collideWall(self.playerRect,direction)
-            self.playerRect.x += 12*direction.x
-            self.playerRect.y += 12*direction.y
-
-            self.cameraX = self.playerRect.x+self.playerRect.width//2-self.width//2
-            self.cameraY = self.playerRect.y+self.playerRect.height//2-self.height//2
 
             #Normal gameplay state
             if self.state == 0:
                 dt = clock.tick(30) #Limit to 30 FPS
-                
-                self.mouseEntity.move(*pygame.mouse.get_pos())                
+
+                keys = pygame.key.get_pressed()
+                direction = Vector()
+                if keys[pygame.K_w]:
+                    direction += Vector(0,-1)
+                if keys[pygame.K_s]:
+                    direction += Vector(0,1)
+                if keys[pygame.K_a]:
+                    direction += Vector(-1,0)
+                if keys[pygame.K_d]:
+                    direction += Vector(1,0)
+
+                self.collideLevel(self.player.rect,direction)
+                self.player.x += 12*direction.x#*30*dt/1000
+                self.player.y += 12*direction.y#*30*dt/1000
+
+                self.player.update(dt)
+
+                self.cameraX = self.player.x+self.player.rect.width//2-self.width//2
+                self.cameraY = self.player.y+self.player.rect.height//2-self.height//2
+
+                self.mouseEntity.move(*pygame.mouse.get_pos())
                 self.draw()
 
     def draw(self):
@@ -329,10 +351,10 @@ class Application:
                     self.screen.blit(self.turretTile,tilerect)
                 if tile == Map.WALL:
                     self.screen.blit(self.wallTile,tilerect)
-        playerScreenRect = pygame.Rect(self.playerRect)
+        playerScreenRect = pygame.Rect(self.player.rect)
         playerScreenRect.x -= self.cameraX
         playerScreenRect.y -= self.cameraY
-        self.screen.blit(self.playerSprite,playerScreenRect)
+        self.screen.blit(self.player.sprite,playerScreenRect)
 
         pygame.display.flip()
 Application().run()
