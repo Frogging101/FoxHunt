@@ -266,11 +266,20 @@ class Application:
     def collideWall(self,obj,direction):
         obj = pygame.Rect(obj)
         obj.x += 5*direction.x
+        collideX = False
+        collideY = False
+
+        if obj.collidelist(self.level.wallTiles) != -1:
+            collideX = True
+        obj.x -= 5*direction.x
         obj.y += 5*direction.y
         if obj.collidelist(self.level.wallTiles) != -1:
-            return True
-        else:
-            return False
+            collideY = True
+
+        if collideX:
+            direction.x = 0
+        if collideY:
+            direction.y = 0
 
     def run(self):
         running = True
@@ -291,9 +300,9 @@ class Application:
             if keys[pygame.K_d]:
                 direction += Vector(1,0)
 
-            if not self.collideWall(self.playerRect,direction):
-                self.playerRect.x += 12*direction.x
-                self.playerRect.y += 12*direction.y
+            self.collideWall(self.playerRect,direction)
+            self.playerRect.x += 12*direction.x
+            self.playerRect.y += 12*direction.y
 
             self.cameraX = self.playerRect.x+self.playerRect.width//2-self.width//2
             self.cameraY = self.playerRect.y+self.playerRect.height//2-self.height//2
@@ -324,11 +333,6 @@ class Application:
         playerScreenRect.x -= self.cameraX
         playerScreenRect.y -= self.cameraY
         self.screen.blit(self.playerSprite,playerScreenRect)
-        """for tile in self.level.wallTiles:
-            tile = pygame.Rect(tile)
-            tile.x -= self.cameraX
-            tile.y -= self.cameraY
-            self.screen.blit(self.wallTile,tile)"""
 
         pygame.display.flip()
 Application().run()
