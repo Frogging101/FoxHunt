@@ -102,7 +102,10 @@ class Turret(Entity):
         super(Turret,self).__init__(Turret.sprite)
     
     def canSeePlayer(self,app):
-        toPlayer = Vector(app.player.x,app.player.y)-Vector(self.x,self.y)
+        center = (self.x+self.rect.width//2,self.y+self.rect.height//2)
+        toPlayer = Vector(app.player.x+app.player.rect.width//2,
+                          app.player.y+app.player.rect.height//2)-\
+                          Vector(*center)
         if toPlayer.getMagnitude() >= 14*Map.tilesize: #Player more than 14 tiles away
             return False
         toPlayer = toPlayer.normalize()
@@ -110,8 +113,11 @@ class Turret(Entity):
         rayLength = 24
         while rayLength < 14*Map.tilesize:
             ray = rayLength*toPlayer
-            colliderRect = pygame.Rect(ray.x,ray.y,1,1)
-            if colliderRect.collidelist(app.level.collisionTiles) != -1:
+            colliderRect = pygame.Rect(ray.x+center[0],ray.y+center[1],1,1)
+            #If the ray hits anything that isn't this turret
+            if colliderRect.collidelist([tile for tile in 
+                                         app.level.collisionTiles 
+                                         if tile != self.rect]) != -1:
                 return False
             if colliderRect.colliderect(app.player.rect):
                 return True
@@ -126,7 +132,9 @@ class Turret(Entity):
             self.shootTimer = 0
 
     def shoot(self,app):
-        toPlayer = Vector(app.player.x,app.player.y)-Vector(self.x,self.y)
+        toPlayer = Vector(app.player.x+app.player.rect.width//2,
+                          app.player.y+app.player.rect.height//2)-\
+                          Vector(self.x+self.rect.width//2,self.y+self.rect.height//2)
         newBullet = Bullet((self.x+self.rect.width//2,self.y+self.rect.height//2),
                            toPlayer.normalize())
         app.bullets.append(newBullet)
