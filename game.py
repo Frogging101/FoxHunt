@@ -68,7 +68,7 @@ class Vector:
     def dot(a,b):
         if not isinstance(a,Vector) or not isinstance(b,Vector):
             raise TypeError
-        return a.x*b.x + a.y*b.y    
+        return a.x*b.x + a.y*b.y
 
 class Entity(object):
     def __init__(self,sprite):
@@ -222,9 +222,8 @@ class Application:
 
         self.level = Map()
         self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
-        self.turretTile = pygame.Surface((Map.tilesize,Map.tilesize))
+        self.turretTile = pygame.image.load("turret.png")#pygame.Surface((Map.tilesize,Map.tilesize))
         self.floorTile.fill((255,0,0))
-        self.turretTile.fill((0,255,0))
 
         self.font = pygame.font.Font("PressStart2P.ttf",24)
 #        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
@@ -266,6 +265,7 @@ class Application:
                 if tile == Map.FLOOR:
                     self.screen.blit(self.floorTile,tilerect)
                 if tile == Map.TURRET:
+                    self.screen.blit(self.floorTile,tilerect)
                     self.screen.blit(self.turretTile,tilerect)
  
         pygame.display.flip()
