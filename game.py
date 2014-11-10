@@ -352,7 +352,6 @@ class Application:
         pygame.mixer.music.play()
 
     def collideLevel(self,obj,direction):
-        return
         obj = pygame.Rect(obj)
         collideX = False
         collideY = False
@@ -369,6 +368,16 @@ class Application:
             direction.x = 0
         if collideY:
             direction.y = 0
+
+    def signalBar(self):
+        distance = (Vector(self.player.x,self.player.y)-\
+                    Vector(self.fox.x,self.fox.y)).getMagnitude()
+        strength = min(10000.0/distance**2,1.0)
+        print strength,distance
+        width = (400*strength)
+        bar = pygame.Surface((width,30))
+        bar.fill((0,255,0))
+        return bar
 
     def run(self):
         running = True
@@ -432,6 +441,29 @@ class Application:
             self.screen.blit(bullet.sprite,bulletScreenRect)
         foxScreenRect = self.fox.rect.move(-self.cameraX,-self.cameraY)
         self.screen.blit(self.fox.sprite,foxScreenRect)
+
+        livesText = self.font.render("Lives: "+str(self.lives),True,(255,255,255))
+        livesTextRect = livesText.get_rect()
+
+        scoreText = self.font.render("Score: "+str(self.score),True,(255,255,255))
+        scoreTextRect = scoreText.get_rect()
+        scoreTextRect = scoreTextRect.move(self.width-scoreTextRect.width,0)
+
+        self.screen.blit(scoreText,scoreTextRect)
+        self.screen.blit(livesText,livesTextRect)
+
+        signalText = self.font.render("Signal",True,(255,255,255))
+        signalTextRect = signalText.get_rect()
+        signalTextRect = signalTextRect.move(self.width//2-\
+                                             signalTextRect.width//2,0)
+
+        bar = self.signalBar()
+        barRect = bar.get_rect()
+        barRect = barRect.move(self.width//2-barRect.width//2,
+                               signalTextRect.height+5)
+
+        self.screen.blit(signalText,signalTextRect)
+        self.screen.blit(bar,barRect)
 
         pygame.display.flip()
 Application().run()
