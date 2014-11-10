@@ -142,9 +142,10 @@ class Turret(Entity):
 class Bullet(Entity):
     sprite = pygame.image.load("bullet.png")
     def __init__(self,origin,direction):
-        print "bullet",origin,direction
         left = Vector(-1,0)
-        angle = (math.acos(Vector.dot(left,direction))*(180/math.pi))
+        angle = math.acos(Vector.dot(left,direction))*(180/math.pi)
+        if direction.y < 0:
+            angle = -angle
         self.sprite = pygame.transform.rotate(Bullet.sprite,angle)
         self.velocity = 25*direction
         self.x = origin[0]
