@@ -152,6 +152,12 @@ class Bullet(Entity):
         self.y = origin[1]
         self.rect = self.sprite.get_rect()
 
+    def update(self,dt,app):
+        if self.rect.collidelist(app.level.wallTiles) != -1:
+            app.bullets.remove(self)
+        else:
+            super(Bullet,self).update(dt)
+
 class Room:
     def __init__(self,level):
         self.xSize = random.randint(4,10)
@@ -178,6 +184,7 @@ class Map:
         self.rooms = []
         self.data = []
         self.collisionTiles = []
+        self.wallTiles = []
         self.turrets = []
 
         #Initialize list of lists data[row][column]
@@ -276,6 +283,7 @@ class Map:
                             self.data[pos[0]][pos[1]] = Map.WALL
                             newTile = pygame.Rect(pos[0]*self.tilesize,pos[1]*self.tilesize,self.tilesize,self.tilesize)
                             self.collisionTiles.append(newTile)
+                            self.wallTiles.append(newTile)
                 x += 1
             y += 1
 
@@ -379,7 +387,7 @@ class Application:
                 for turret in self.level.turrets:
                     turret.update(dt,self)
                 for bullet in self.bullets:
-                    bullet.update(dt)
+                    bullet.update(dt,self)
 
                 self.cameraX = self.player.x+self.player.rect.width//2-self.width//2
                 self.cameraY = self.player.y+self.player.rect.height//2-self.height//2
