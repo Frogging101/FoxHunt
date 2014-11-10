@@ -344,10 +344,10 @@ class Application:
 
     def collideLevel(self,obj,direction):
         obj = pygame.Rect(obj)
-        obj.x += 5*direction.x
         collideX = False
         collideY = False
 
+        obj.x += 11*direction.x
         if obj.collidelist(self.level.collisionTiles) != -1:
             collideX = True
         obj.x -= 11*direction.x
