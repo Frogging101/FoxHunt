@@ -1,0 +1,20 @@
+eb-loss.wav, eb-youwin.wav
+----------
+Tracks from EarthBound
+© 1994 Nintendo/APE inc.
+
+159408__noirenex__life-lost-game-over.wav
+----------
+Public domain, obtained from freesound.org
+
+Press Start 2P TTF Font
+----------
+See PressStart2P_License.txt for license info
+
+foxhunt.png
+----------
+Unknown source. Signed "CKF!"
+
+
+----------
+All other assets are created and/or owned by me.

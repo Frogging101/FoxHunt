@@ -101,7 +101,7 @@ class Turret(Entity):
         #Timer, turret will fire when it reaches a certain random number
         self.shootTimer = 0
         self.shootTimerEnd = random.randint(900,1325)
-        self.health = 100
+        self.health = random.randint(2,3)*50
         super(Turret,self).__init__(Turret.sprite)
     
     def canSeePlayer(self,app):
@@ -158,7 +158,7 @@ class Bullet(Entity):
         if direction.y < 0:
             angle = -angle
         self.sprite = pygame.transform.rotate(Bullet.sprite,angle)
-        self.velocity = 20*direction
+        self.velocity = 22*direction
         self.x = origin[0]
         self.y = origin[1]
         self.rect = self.sprite.get_rect()
@@ -190,6 +190,7 @@ class Room:
         self.rect = pygame.Rect(self.x,self.y,self.xSize,self.ySize)
 
 class Map:
+    #Tile types
     EMPTY = 0
     FLOOR = 1
     WALL = 2
@@ -294,6 +295,7 @@ class Map:
             for x in range(1,self.xSize-1):
                 if self.data[x][y] != Map.EMPTY and self.data[x][y] != Map.WALL:
                     adjacents = []
+                    #Positions of all the adjacent tiles, so they may be looped through
                     adjacents.append((x-1,y-1))
                     adjacents.append((x-1,y+1))
                     adjacents.append((x-1,y))
@@ -456,8 +458,10 @@ class Application:
                     self.win = True
                     self.state = 1
                     self.score += 1250
+
                 if self.lives < 0:
                     self.state = 1
+
                 if self.health < 0:
                     self.dieSound.play()
                     pygame.time.delay(int(self.dieSound.get_length()*1000))
