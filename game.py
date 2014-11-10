@@ -99,6 +99,7 @@ class Turret(Entity):
     sprite = pygame.image.load("turret.png")
     def __init__(self):
         self.shootTimer = 0
+        self.shootTimerEnd = random.randint(900,1500)
         super(Turret,self).__init__(Turret.sprite)
     
     def canSeePlayer(self,app):
@@ -126,10 +127,11 @@ class Turret(Entity):
 
     def update(self,dt,app):
         self.shootTimer += dt
-        if self.shootTimer >= 1500:
+        if self.shootTimer >= self.shootTimerEnd:
             if self.canSeePlayer(app):
                 self.shoot(app)
             self.shootTimer = 0
+            self.shootTimerEnd = random.randint(900,1500)
 
     def shoot(self,app):
         toPlayer = Vector(app.player.x+app.player.rect.width//2,
@@ -137,6 +139,7 @@ class Turret(Entity):
                           Vector(self.x+self.rect.width//2,self.y+self.rect.height//2)
         newBullet = Bullet((self.x+self.rect.width//2,self.y+self.rect.height//2),
                            toPlayer.normalize())
+        app.bulletSound.play()
         app.bullets.append(newBullet)
 
 class Bullet(Entity):
@@ -328,6 +331,8 @@ class Application:
         self.player = Entity(pygame.image.load("player.png"))
         self.player.move(self.level.spawnX,self.level.spawnY)
 
+        self.bulletSound = pygame.mixer.Sound("bullet.wav")
+
         self.bullets = []
 
         self.floorTile.fill((255,0,0))
@@ -345,8 +350,8 @@ class Application:
 
         if obj.collidelist(self.level.collisionTiles) != -1:
             collideX = True
-        obj.x -= 5*direction.x
-        obj.y += 5*direction.y
+        obj.x -= 11*direction.x
+        obj.y += 11*direction.y
         if obj.collidelist(self.level.collisionTiles) != -1:
             collideY = True
 
@@ -380,8 +385,8 @@ class Application:
                     direction += Vector(1,0)
 
                 self.collideLevel(self.player.rect,direction)
-                self.player.x += 12*direction.x#*30*dt/1000
-                self.player.y += 12*direction.y#*30*dt/1000
+                self.player.x += 11*direction.x#*30*dt/1000
+                self.player.y += 11*direction.y#*30*dt/1000
 
                 self.player.update(dt)
                 for turret in self.level.turrets:
