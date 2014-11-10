@@ -158,6 +158,9 @@ class Bullet(Entity):
     def update(self,dt,app):
         if self.rect.collidelist(app.level.wallTiles) != -1:
             app.bullets.remove(self)
+        elif self.rect.colliderect(app.player.rect):
+            app.damageSound.play()
+            app.bullets.remove(self)
         else:
             super(Bullet,self).update(dt)
 
@@ -332,12 +335,13 @@ class Application:
         self.player.move(self.level.spawnX,self.level.spawnY)
 
         self.bulletSound = pygame.mixer.Sound("bullet.wav")
+        self.bgm = pygame.mixer.music.load("bg.wav")
+        self.damageSound = pygame.mixer.Sound("oof.wav")
 
         self.bullets = []
 
         self.font = pygame.font.Font("PressStart2P.ttf",24)
-#        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
-#        self.endgameSound = pygame.mixer.Sound("171672__fins__failure-2.wav")
+        pygame.mixer.music.play()
 
     def collideLevel(self,obj,direction):
         obj = pygame.Rect(obj)
