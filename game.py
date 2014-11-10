@@ -217,6 +217,12 @@ class Map:
         self.spawnX = spawnRoom.x*self.tilesize + (spawnRoom.xSize*self.tilesize)//2
         self.spawnY = spawnRoom.y*self.tilesize + (spawnRoom.ySize*self.tilesize)//2
 
+        foxRoom = spawnRoom
+        while foxRoom == spawnRoom:
+            foxRoom = self.rooms[random.randint(0,self.numRooms-1)]
+        self.foxX = foxRoom.x*self.tilesize + (foxRoom.xSize*self.tilesize)//2
+        self.foxY = foxRoom.y*self.tilesize + (foxRoom.ySize*self.tilesize)//2
+
         #Create hallways between rooms
         for i in range(self.numRooms-1):
             room1 = self.rooms[i]
@@ -333,6 +339,8 @@ class Application:
         self.wallTile = pygame.image.load("wall.png")
         self.player = Entity(pygame.image.load("player.png"))
         self.player.move(self.level.spawnX,self.level.spawnY)
+        self.fox = Entity(pygame.image.load("fox.png"))
+        self.fox.move(self.level.foxX,self.level.foxY)
 
         self.bulletSound = pygame.mixer.Sound("bullet.wav")
         self.bgm = pygame.mixer.music.load("bg.wav")
@@ -344,6 +352,7 @@ class Application:
         pygame.mixer.music.play()
 
     def collideLevel(self,obj,direction):
+        return
         obj = pygame.Rect(obj)
         collideX = False
         collideY = False
@@ -421,6 +430,8 @@ class Application:
         for bullet in self.bullets:
             bulletScreenRect = bullet.rect.move(-self.cameraX,-self.cameraY)
             self.screen.blit(bullet.sprite,bulletScreenRect)
+        foxScreenRect = self.fox.rect.move(-self.cameraX,-self.cameraY)
+        self.screen.blit(self.fox.sprite,foxScreenRect)
 
         pygame.display.flip()
 Application().run()
