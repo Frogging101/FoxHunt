@@ -325,18 +325,15 @@ class Application:
         self.cameraY = 0
 
         self.level = Map()
-        self.floorTile = pygame.Surface((Map.tilesize,Map.tilesize))
+        self.floorTile = pygame.image.load("floor.png")
         self.turretTile = pygame.image.load("turret.png")
-        self.wallTile = pygame.Surface((Map.tilesize,Map.tilesize))
+        self.wallTile = pygame.image.load("wall.png")
         self.player = Entity(pygame.image.load("player.png"))
         self.player.move(self.level.spawnX,self.level.spawnY)
 
         self.bulletSound = pygame.mixer.Sound("bullet.wav")
 
         self.bullets = []
-
-        self.floorTile.fill((255,0,0))
-        self.wallTile.fill((0,0,255))
 
         self.font = pygame.font.Font("PressStart2P.ttf",24)
 #        self.dieSound = pygame.mixer.Sound("159408__noirenex__life-lost-game-over.wav")
